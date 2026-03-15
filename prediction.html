@@ -14,7 +14,16 @@
   <a href="schedule.html" class="nav-link">Schedule</a>
   <a href="prediction.html" class="nav-link">Predictions</a>
 </nav>
-
+<script>
+  // Highlight current page in navbar
+  const links = document.querySelectorAll('nav a.nav-link');
+  const current = location.pathname.split("/").pop(); // gets current filename
+  links.forEach(link => {
+    if(link.getAttribute('href') === current){
+      link.classList.add('active');
+    }
+  });
+</script>
 <section>
 <h2>User Login / Register</h2>
 <input type="text" id="predUsername" placeholder="Username">
