@@ -1,51 +1,166 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>Rocket League Family Tournament</title>
 <style>
-body{
-font-family: Arial;
-background:#0f172a;
-color:white;
-text-align:center;
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: white;
+  margin: 0;
+  padding: 0;
 }
-
-table{
-margin:auto;
-border-collapse:collapse;
+header {
+  background: #38bdf8;
+  padding: 20px;
+  text-align: center;
+  color: #0f172a;
 }
-
-td,th{
-border:1px solid white;
-padding:10px;
+section {
+  padding: 20px;
+  border-bottom: 1px solid #333;
 }
-
-h1{
-color:#38bdf8;
+h2 {
+  color: #38bdf8;
+}
+table {
+  width: 80%;
+  margin: 10px auto;
+  border-collapse: collapse;
+}
+td, th {
+  border: 1px solid white;
+  padding: 10px;
+  text-align: center;
+}
+button {
+  padding: 5px 10px;
+  margin: 5px;
+  cursor: pointer;
+}
+.ticketActive {
+  color: yellow;
+  font-weight: bold;
+}
+.penalty {
+  color: red;
+  font-weight: bold;
 }
 </style>
 </head>
-
 <body>
 
-<h1>Rocket League Family Tournament</h1>
+<header>
+  <h1>Rocket League Family Tournament</h1>
+</header>
 
-<h2>Leaderboard</h2>
+<section id="tournament-info">
+  <h2>Tournament Rules</h2>
+  <p>5 or 6 players rotate in 2v2 matches. Points from Rocket League scoreboard are used. Top 4 players go to the final 2v2 match. Zaid and Joud have beginner bonuses.</p>
+</section>
 
-<table>
-<tr>
-<th>Player</th>
-<th>Points</th>
-</tr>
+<section id="ticket-info">
+  <h2>Power Ticket</h2>
+  <p>The Man of the Match gets 1 Power Ticket per game. Options:</p>
+  <ol>
+    <li>Steal 150 points from another player</li>
+    <li>1.5× multiplier for next game</li>
+    <li>Give a 15 sec penalty to another player</li>
+  </ol>
+</section>
 
-<tr><td>Karam</td><td>0</td></tr>
-<tr><td>Abood</td><td>0</td></tr>
-<tr><td>Belal</td><td>0</td></tr>
-<tr><td>Omar</td><td>0</td></tr>
-<tr><td>Zaid</td><td>0</td></tr>
-<tr><td>Joud</td><td>0</td></tr>
+<section id="leaderboard">
+  <h2>Leaderboard</h2>
+  <table id="scoreTable">
+    <tr><th>Player</th><th>Points</th><th>Status</th></tr>
+    <tr><td>Karam</td><td>0</td><td></td></tr>
+    <tr><td>Abood</td><td>0</td><td></td></tr>
+    <tr><td>Belal</td><td>0</td><td></td></tr>
+    <tr><td>Omar</td><td>0</td><td></td></tr>
+    <tr><td>Zaid</td><td>50</td><td></td></tr>
+    <tr><td>Joud</td><td>30</td><td></td></tr>
+  </table>
+  <div style="text-align:center; margin-top:10px;">
+    <button onclick="editPoints()">Edit Points</button>
+    <button onclick="useTicket()">Use Power Ticket</button>
+  </div>
+</section>
 
-</table>
+<script>
+const password = "karam123"; // Only you can edit
+let multiplierNextGame = {};
+let penaltyNextGame = {};
+
+function editPoints() {
+  let pass = prompt("Enter password to edit points:");
+  if(pass !== password) { alert("Wrong password"); return; }
+
+  const table = document.getElementById("scoreTable");
+  for(let i=1; i<table.rows.length; i++){
+    let player = table.rows[i].cells[0].innerText;
+    let current = parseInt(table.rows[i].cells[1].innerText);
+    let newScore = prompt(`Enter points for ${player}:`, current);
+    if(newScore === null) continue;
+
+    let points = parseInt(newScore);
+
+    // Apply 1.5x multiplier if exists
+    if(multiplierNextGame[player]){
+      points = Math.round(points * 1.5);
+      table.rows[i].cells[2].innerText = "";
+      multiplierNextGame[player] = false;
+    }
+
+    // Apply penalty if exists
+    if(penaltyNextGame[player]){
+      table.rows[i].cells[2].innerText = "15 sec penalty";
+      penaltyNextGame[player] = false;
+    } else if(table.rows[i].cells[2].innerText === "15 sec penalty") {
+      table.rows[i].cells[2].innerText = "";
+    }
+
+    table.rows[i].cells[1].innerText = points;
+  }
+}
+
+function useTicket() {
+  let pass = prompt("Enter password to use ticket:");
+  if(pass !== password) { alert("Wrong password"); return; }
+
+  const table = document.getElementById("scoreTable");
+  let playerNames = [];
+  for(let i=1;i<table.rows.length;i++) playerNames.push(table.rows[i].cells[0].innerText);
+
+  let man = prompt("Enter Man of the Match name:", playerNames[0]);
+  if(!playerNames.includes(man)) { alert("Invalid player"); return; }
+
+  let choice = prompt("Choose ticket:\n1 = Steal 150 pts\n2 = 1.5x next game\n3 = 15 sec penalty");
+
+  if(choice == "1"){
+    let target = prompt("Enter player to steal 150 points from:");
+    if(!playerNames.includes(target) || target===man){ alert("Invalid target"); return; }
+    for(let i=1;i<table.rows.length;i++){
+      if(table.rows[i].cells[0].innerText===man) table.rows[i].cells[1].innerText = parseInt(table.rows[i].cells[1].innerText)+150;
+      if(table.rows[i].cells[0].innerText===target) table.rows[i].cells[1].innerText = parseInt(table.rows[i].cells[1].innerText)-150;
+    }
+  } else if(choice == "2"){
+    multiplierNextGame[man] = true;
+    for(let i=1;i<table.rows.length;i++){
+      if(table.rows[i].cells[0].innerText===man) table.rows[i].cells[2].innerText = "1.5× next game";
+    }
+  } else if(choice == "3"){
+    let target = prompt("Enter player to give 15 sec penalty to:");
+    if(!playerNames.includes(target) || target===man){ alert("Invalid target"); return; }
+    penaltyNextGame[target] = true;
+    for(let i=1;i<table.rows.length;i++){
+      if(table.rows[i].cells[0].innerText===target) table.rows[i].cells[2].innerText = "15 sec penalty";
+    }
+  } else {
+    alert("Invalid choice");
+  }
+}
+</script>
 
 </body>
 </html>
