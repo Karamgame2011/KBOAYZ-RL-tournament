@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RL Tournament Predictions</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>Rocket League Family Tournament - Predictions</header>
+<nav>
+  <button onclick="location.href='index.html'">Home</button>
+  <button onclick="location.href='leaderboard.html'">Leaderboard</button>
+  <button onclick="location.href='schedule.html'">Schedule</button>
+</nav>
+
+<section>
+<h2>User Login / Register</h2>
+<input type="text" id="predUsername" placeholder="Username">
+<input type="password" id="predPassword" placeholder="Password">
+<button onclick="registerLogin()">Login / Register</button>
+<p id="loginMsg"></p>
+</section>
+
+<section id="predictionPanel" style="display:none;">
+<h2>Next Match Predictions</h2>
+<div id="nextMatches"></div>
+<button onclick="submitPredictions()">Submit Predictions</button>
+<p id="predStatus"></p>
+</section>
+
+<section>
+<h2>User Points</h2>
+<table id="predictionTable">
+  <tr><th>Username</th><th>Prediction Points</th></tr>
+</table>
+</section>
+
+<script>
+// ---------- User system ----------
+if(!localStorage.getItem("predUsers")) localStorage.setItem("predUsers", JSON.stringify({}));
+// Structure: {username: {password: "pass", points:0, predictions:{}}}
+let currentUser = null;
+
+// Login or register
+function registerLogin() {
+  const username = document.getElementById("predUsername").value.trim();
+  const password = document.getElementById("predPassword").value.trim();
+  if(username===""||password==="") return alert("Enter username and password");
+
+  let users = JSON.parse(localStorage.getItem("predUsers"));
+  if(users[username]){
+    // Login
+    if(users[username].password !== password) return alert("Wrong password");
+    currentUser = username;
+    document.getElementById("loginMsg").innerText = `Logged in as ${username}`;
+  } else {
+    // Register
+    users[username] = {password: password, points:0, predictions:{}};
+    localStorage.setItem("predUsers", JSON.stringify(users));
+    currentUser = username;
+    document.getElementById("loginMsg").innerText = `Registered and logged in as ${username}`;
+  }
+
+  document.getElementById("predictionPanel").style.display="block";
+  updatePredictionTable();
+  loadMatches();
+}
+
+// ---------- Load matches ----------
+function loadMatches() {
+  const scheduleTable = document.getElementById("scheduleTable") || document.createElement("table");
+  // Grab matches from localStorage schedule
+  const scheduleHTML = `<table id="scheduleTable" style="display:none;">
+    <tr><th>Team 1</th><th>Score</th><th>Team 2</th></tr>
+    <tr><td>Karam + Zaid</td><td>0 - 0</td><td>Abood + Omar</td></tr>
+    <tr><td>Belal + Joud</td><td>0 - 0</td><td>Karam + Omar</td></tr>
+    <tr><td>Abood + Zaid</td><td>0 - 0</td><td>Belal + Omar</td></tr>
+    <tr><td>Karam + Belal</td><td>0 - 0</td><td>Abood + Joud</td></tr>
+    <tr><td>Omar + Zaid</td><td>0 - 0</td><td>Karam + Joud</td></tr>
+    <tr><td>Belal + Omar</td><td>0 - 0</td><td>Abood + Zaid</td></tr>
+  </table>`;
+  document.getElementById("nextMatches").innerHTML = scheduleHTML;
+
+  const table = document.getElementById("scheduleTable");
+  const panel = document.getElementById("nextMatches");
+  panel.innerHTML = "";
+  for(let i=1;i<table.rows.length;i++){
+    const t1 = table.rows[i].cells[0].innerText;
+    const t2 = table.rows[i].cells[2].innerText;
+    const matchId = `match${i}`;
+    panel.innerHTML += `<div style="margin:10px 0;">
+      <b>${t1} vs ${t2}</b> &nbsp;
+      <select id="${matchId}">
+        <option value="">Pick MVP</option>
+        <option>${t1.split(" + ")[0]}</option>
+        <option>${t1.split(" + ")[1]}</option>
+        <option>${t2.split(" + ")[0]}</option>
+        <option>${t2.split(" + ")[1]}</option>
+      </select>
+    </div>`;
+  }
+}
+
+// ---------- Submit predictions ----------
+function submitPredictions() {
+  if(!currentUser) return alert("Login first");
+  let users = JSON.parse(localStorage.getItem("predUsers"));
+  const table = document.getElementById("scheduleTable");
+
+  for(let i=1;i<table.rows.length;i++){
+    const matchId = `match${i}`;
+    const selected = document.getElementById(matchId).value;
+    if(selected==="") continue;
+    users[currentUser].predictions[matchId] = selected;
+  }
+
+  // Check for completed matches (MVP set in schedule localStorage)
+  const scheduleStars = JSON.parse(localStorage.getItem("rl_stars") || "{}");
+
+  let points = users[currentUser].points;
+
+  for(let matchId in users[currentUser].predictions){
+    const guess = users[currentUser].predictions[matchId];
+    // If the guessed player has MVP star, award 1 point
+    if(scheduleStars[guess]>0){
+      points += 1;
+      delete users[currentUser].predictions[matchId]; // Can't vote again
+    }
+  }
+
+  users[currentUser].points = points;
+  localStorage.setItem("predUsers", JSON.stringify(users));
+  updatePredictionTable();
+  document.getElementById("predStatus").innerText = `Predictions submitted and points updated!`;
+}
+
+// ---------- Update prediction points table ----------
+function updatePredictionTable() {
+  const tableEl = document.getElementById("predictionTable");
+  const users = JSON.parse(localStorage.getItem("predUsers"));
+  tableEl.innerHTML = `<tr><th>Username</th><th>Prediction Points</th></tr>`;
+  for(let u in users){
+    tableEl.innerHTML += `<tr><td>${u}</td><td>${users[u].points}</td></tr>`;
+  }
+}
+</script>
+</body>
+</html>
