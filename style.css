@@ -1,0 +1,126 @@
+/* style.css */
+
+/* --- General Body --- */
+body {
+  font-family: 'Arial', sans-serif;
+  background: #0f172a;
+  color: white;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- Header --- */
+header {
+  background: #38bdf8;
+  color: #0f172a;
+  text-align: center;
+  padding: 25px 10px;
+  font-size: 2em;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+/* --- Navigation Bar --- */
+nav {
+  display: flex;
+  justify-content: center;
+  background: #1e293b;
+  padding: 10px 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-wrap: wrap;
+}
+
+nav button {
+  background: #38bdf8;
+  color: #0f172a;
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 5px;
+  transition: 0.2s;
+}
+
+nav button:hover {
+  background: #22d3ee;
+}
+
+/* --- Sections --- */
+section {
+  padding: 20px;
+  max-width: 900px;
+  margin: 20px auto;
+  border-bottom: 1px solid #333;
+  border-radius: 8px;
+  background: #1e293b;
+}
+
+/* --- Section Headers --- */
+h2 {
+  color: #38bdf8;
+  margin-top: 0;
+}
+
+/* --- Tables --- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+td, th {
+  border: 1px solid #38bdf8;
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1em;
+}
+
+.ticketActive {
+  color: yellow;
+  font-weight: bold;
+}
+
+.penalty {
+  color: red;
+  font-weight: bold;
+}
+
+.star {
+  color: gold;
+  font-size: 1.2em;
+  margin-left: 5px;
+}
+
+/* --- Buttons in Sections --- */
+section button {
+  background: #38bdf8;
+  color: #0f172a;
+  border: none;
+  padding: 8px 15px;
+  margin: 5px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+section button:hover {
+  background: #22d3ee;
+}
+
+/* --- Responsive for mobile --- */
+@media screen and (max-width: 600px) {
+  nav {
+    flex-direction: column;
+  }
+  nav button {
+    margin: 5px 0;
+  }
+  table {
+    font-size: 0.9em;
+  }
+}
