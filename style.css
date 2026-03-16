@@ -10,12 +10,23 @@ body {
 }
 
 header {
-background: linear-gradient(90deg, #021a4a, #1e5bd8, #6ec1ff);
+  background: linear-gradient(90deg, #000022, #a0e0ff);
+  background-size: 200% 100%; /* allows the gradient to move */
   color: white;
   padding: 20px;
   text-align: center;
   font-size: 24px;
   font-weight: bold;
+  animation: gradientSlide 6s linear infinite; /* moves gradient continuously */
+}
+
+@keyframes gradientSlide {
+  0% {
+    background-position: 100% 0; /* start at right */
+  }
+  100% {
+    background-position: 0 0; /* end at left */
+  }
 }
 /* Navbar container */
 nav {
