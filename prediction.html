@@ -1,182 +1,118 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RL Tournament Predictions</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rocket League Prediction Leaderboard</title>
+
+<!-- Firebase SDKs -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getFirestore, collection, doc, setDoc, updateDoc, increment, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  // 🔹 Your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDNuj0bwWC8Zvk_UsjmOktHf1MTXo8OFP4",
+    authDomain: "rl-tournament-kboayz.firebaseapp.com",
+    projectId: "rl-tournament-kboayz",
+    storageBucket: "rl-tournament-kboayz.firebasestorage.app",
+    messagingSenderId: "836913120932",
+    appId: "1:836913120932:web:c6994acf39bf71d6354831",
+    measurementId: "G-VR167KSXEB"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 🔹 Current logged-in user
+  let currentUser = null;
+
+  // Create or login user
+  window.createOrLogin = async function() {
+    const username = document.getElementById("username").value.trim();
+    if (!username) return alert("Enter a username!");
+    currentUser = username;
+
+    const userRef = doc(db, "predictions", username);
+    await setDoc(userRef, { name: username, points: 0 }, { merge: true });
+  };
+
+  // Add a point when the prediction is correct
+  window.addPoint = async function(username) {
+    const userRef = doc(db, "predictions", username);
+    await updateDoc(userRef, { points: increment(1) });
+  };
+
+  // Real-time leaderboard
+  window.onload = () => {
+    const q = query(collection(db, "predictions"), orderBy("points", "desc"));
+    onSnapshot(q, (snapshot) => {
+      const list = document.getElementById("leaderboard");
+      list.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        list.innerHTML += `<li>${data.name}: ${data.points} pts</li>`;
+      });
+    });
+  };
+</script>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #0a0a1f;
+    color: white;
+    text-align: center;
+    padding: 20px;
+  }
+
+  header {
+    background: linear-gradient(90deg, #000022, #a0e0ff);
+    background-size: 300% 100%;
+    padding: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    animation: gradientSlide 10s ease-in-out infinite alternate;
+    margin-bottom: 20px;
+  }
+
+  @keyframes gradientSlide {
+    0% { background-position: 0% 0; }
+    100% { background-position: 50% 0; }
+  }
+
+  input, button {
+    padding: 10px;
+    margin: 5px;
+    font-size: 16px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  li {
+    font-size: 20px;
+    margin: 5px 0;
+  }
+</style>
 </head>
 <body>
-<script> 
-  // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDNuj0bwWC8Zvk_UsjmOktHf1MTXo8OFP4",
-  authDomain: "rl-tournament-kboayz.firebaseapp.com",
-  projectId: "rl-tournament-kboayz",
-  storageBucket: "rl-tournament-kboayz.firebasestorage.app",
-  messagingSenderId: "836913120932",
-  appId: "1:836913120932:web:c6994acf39bf71d6354831",
-  measurementId: "G-VR167KSXEB"
-};
+<header>Rocket League Prediction Leaderboard</header>
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-</script>
-<header>Rocket League Family Tournament - Predictions</header>
-<nav>
-  <a href="index.html" class="nav-link">Home</a>
-  <a href="leaderboard.html" class="nav-link">Leaderboard</a>
-  <a href="schedule.html" class="nav-link">Schedule</a>
-  <a href="prediction.html" class="nav-link">Predictions</a>
-</nav>
-<script>
-  // Highlight current page in navbar
-  const links = document.querySelectorAll('nav a.nav-link');
-  const current = location.pathname.split("/").pop(); // gets current filename
-  links.forEach(link => {
-    if(link.getAttribute('href') === current){
-      link.classList.add('active');
-    }
-  });
-</script>
-<section>
-<h2>User Login / Register</h2>
-<input type="text" id="predUsername" placeholder="Username">
-<input type="password" id="predPassword" placeholder="Password">
-<button onclick="registerLogin()">Login / Register</button>
-<p id="loginMsg"></p>
-</section>
+<h2>Log In</h2>
+<input type="text" id="username" placeholder="Enter your username">
+<button onclick="createOrLogin()">Log In</button>
 
-<section id="predictionPanel" style="display:none;">
-<h2>Next Match Predictions</h2>
-<div id="nextMatches"></div>
-<button onclick="submitPredictions()">Submit Predictions</button>
-<p id="predStatus"></p>
-</section>
+<h2>Leaderboard</h2>
+<ul id="leaderboard"></ul>
 
-<section>
-<h2>User Points</h2>
-<table id="predictionTable">
-  <tr><th>Username</th><th>Prediction Points</th></tr>
-</table>
-</section>
+<!-- Example button to test adding a point -->
+<!-- In your real system, call addPoint(currentUser) when prediction is correct -->
+<!-- <button onclick="addPoint(currentUser)">Add Point (test)</button> -->
 
-<script>
-// ---------- User system ----------
-if(!localStorage.getItem("predUsers")) localStorage.setItem("predUsers", JSON.stringify({}));
-// Structure: {username: {password: "pass", points:0, predictions:{}}}
-let currentUser = null;
-
-// Login or register
-function registerLogin() {
-  const username = document.getElementById("predUsername").value.trim();
-  const password = document.getElementById("predPassword").value.trim();
-  if(username===""||password==="") return alert("Enter username and password");
-
-  let users = JSON.parse(localStorage.getItem("predUsers"));
-  if(users[username]){
-    // Login
-    if(users[username].password !== password) return alert("Wrong password");
-    currentUser = username;
-    document.getElementById("loginMsg").innerText = `Logged in as ${username}`;
-  } else {
-    // Register
-    users[username] = {password: password, points:0, predictions:{}};
-    localStorage.setItem("predUsers", JSON.stringify(users));
-    currentUser = username;
-    document.getElementById("loginMsg").innerText = `Registered and logged in as ${username}`;
-  }
-
-  document.getElementById("predictionPanel").style.display="block";
-  updatePredictionTable();
-  loadMatches();
-}
-
-// ---------- Load matches ----------
-function loadMatches() {
-  const scheduleTable = document.getElementById("scheduleTable") || document.createElement("table");
-  // Grab matches from localStorage schedule
-  const scheduleHTML = `<table id="scheduleTable" style="display:none;">
-    <tr><th>Team 1</th><th>Score</th><th>Team 2</th></tr>
-    <tr><td>Karam + Zaid</td><td>0 - 0</td><td>Abood + Omar</td></tr>
-    <tr><td>Belal + Joud</td><td>0 - 0</td><td>Karam + Omar</td></tr>
-    <tr><td>Abood + Zaid</td><td>0 - 0</td><td>Belal + Omar</td></tr>
-    <tr><td>Karam + Belal</td><td>0 - 0</td><td>Abood + Joud</td></tr>
-    <tr><td>Omar + Zaid</td><td>0 - 0</td><td>Karam + Joud</td></tr>
-    <tr><td>Belal + Omar</td><td>0 - 0</td><td>Abood + Zaid</td></tr>
-  </table>`;
-  document.getElementById("nextMatches").innerHTML = scheduleHTML;
-
-  const table = document.getElementById("scheduleTable");
-  const panel = document.getElementById("nextMatches");
-  panel.innerHTML = "";
-  for(let i=1;i<table.rows.length;i++){
-    const t1 = table.rows[i].cells[0].innerText;
-    const t2 = table.rows[i].cells[2].innerText;
-    const matchId = `match${i}`;
-    panel.innerHTML += `<div style="margin:10px 0;">
-      <b>${t1} vs ${t2}</b> &nbsp;
-      <select id="${matchId}">
-        <option value="">Pick MVP</option>
-        <option>${t1.split(" + ")[0]}</option>
-        <option>${t1.split(" + ")[1]}</option>
-        <option>${t2.split(" + ")[0]}</option>
-        <option>${t2.split(" + ")[1]}</option>
-      </select>
-    </div>`;
-  }
-}
-
-// ---------- Submit predictions ----------
-function submitPredictions() {
-  if(!currentUser) return alert("Login first");
-  let users = JSON.parse(localStorage.getItem("predUsers"));
-  const table = document.getElementById("scheduleTable");
-
-  for(let i=1;i<table.rows.length;i++){
-    const matchId = `match${i}`;
-    const selected = document.getElementById(matchId).value;
-    if(selected==="") continue;
-    users[currentUser].predictions[matchId] = selected;
-  }
-
-  // Check for completed matches (MVP set in schedule localStorage)
-  const scheduleStars = JSON.parse(localStorage.getItem("rl_stars") || "{}");
-
-  let points = users[currentUser].points;
-
-  for(let matchId in users[currentUser].predictions){
-    const guess = users[currentUser].predictions[matchId];
-    // If the guessed player has MVP star, award 1 point
-    if(scheduleStars[guess]>0){
-      points += 1;
-      delete users[currentUser].predictions[matchId]; // Can't vote again
-    }
-  }
-
-  users[currentUser].points = points;
-  localStorage.setItem("predUsers", JSON.stringify(users));
-  updatePredictionTable();
-  document.getElementById("predStatus").innerText = `Predictions submitted and points updated!`;
-}
-
-// ---------- Update prediction points table ----------
-function updatePredictionTable() {
-  const tableEl = document.getElementById("predictionTable");
-  const users = JSON.parse(localStorage.getItem("predUsers"));
-  tableEl.innerHTML = `<tr><th>Username</th><th>Prediction Points</th></tr>`;
-  for(let u in users){
-    tableEl.innerHTML += `<tr><td>${u}</td><td>${users[u].points}</td></tr>`;
-  }
-}
-</script>
 </body>
 </html>
