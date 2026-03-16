@@ -47,13 +47,14 @@
   </table>
 </section>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 window.onload = function() {
 
-  // Highlight navbar
+  // Highlight current nav link
   const links = document.querySelectorAll('nav a.nav-link');
   const current = location.pathname.split("/").pop();
   links.forEach(link => { if(link.getAttribute('href')===current) link.classList.add('active'); });
@@ -73,12 +74,12 @@ window.onload = function() {
   const db = firebase.firestore();
   let currentUser = null;
 
-  // Login / register
+  // LOGIN / REGISTER
   async function createOrLogin() {
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value.trim();
     if(!username || !password) return alert("Enter username & password!");
-    
+
     const userRef = db.collection("predictions").doc(username);
     const docSnap = await userRef.get();
     if(docSnap.exists){
@@ -89,15 +90,16 @@ window.onload = function() {
 
     currentUser = username;
     alert("Logged in as "+currentUser);
-    
+
     // Show prediction section
     document.getElementById("predictionSection").style.display = "block";
   }
 
+  // Attach login button listener
   document.getElementById("loginBtn").addEventListener("click", createOrLogin);
 
-  // Submit prediction (auto-add point if correct)
-  const correctMVP = "Zaid"; // Example: change dynamically for real matches
+  // SUBMIT PREDICTION
+  const correctMVP = "Zaid"; // change dynamically for real matches
   document.getElementById("submitPredictionBtn").addEventListener("click", async function(){
     if(!currentUser) return alert("Log in first!");
     const prediction = document.getElementById("mvpPrediction").value.trim();
@@ -113,7 +115,7 @@ window.onload = function() {
     document.getElementById("mvpPrediction").value = "";
   });
 
-  // Real-time leaderboard
+  // REAL-TIME LEADERBOARD
   const table = document.getElementById("leaderboardTable");
   db.collection("predictions").orderBy("points","desc").onSnapshot(snapshot=>{
     table.innerHTML = '<tr><th>Player</th><th>Points</th></tr>';
