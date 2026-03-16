@@ -10,24 +10,12 @@ body {
 }
 
 header {
-  background: linear-gradient(to left, #3aa0ff, #0a3d91);
-  background-size: 200% 100%;
+  background: linear-gradient(90deg, #0a3d91, #3aa0ff);
   color: white;
   padding: 20px;
   text-align: center;
   font-size: 24px;
   font-weight: bold;
-  animation: gradientMove 6s ease infinite;
-}
-
-@keyframes gradientMove {
-  0% {
-    background-position: right;
-  }
-  100% {
-    background-position: left;
-  }
-
 }
 /* Navbar container */
 nav {
