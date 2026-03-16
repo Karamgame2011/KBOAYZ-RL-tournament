@@ -151,6 +151,9 @@ async function submitPrediction() {
       row.insertCell(1).textContent=data.points;
     });
   });
+  document.getElementById("loginBtn").addEventListener("click", function() {
+  createOrLogin();
+});
 </script>
 
 </body>
