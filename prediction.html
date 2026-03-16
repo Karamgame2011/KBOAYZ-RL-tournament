@@ -64,8 +64,8 @@
 
 <section id="predictionSection">
   <h2>Predict Next MVP</h2>
-  <input type="text" id="mvpPrediction" placeholder="Player Name">
-  <button onclick="submitPrediction()">Submit Prediction</button>
+ <input type="text" id="mvpPrediction" placeholder="Player Name">
+<button id="submitPredictionBtn" onclick="submitPrediction()" disabled>Submit Prediction</button>
 </section>
 
 <section>
@@ -96,28 +96,44 @@
   let currentUser = null;
 
   async function createOrLogin() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-    if(!username || !password) return alert("Enter username & password!");
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  if (!username || !password) return alert("Enter username & password!");
 
-    const userRef = db.collection("predictions").doc(username);
+  const userRef = db.collection("predictions").doc(username);
+  try {
     const docSnap = await userRef.get();
-    if(docSnap.exists){
-      if(docSnap.data().password !== password) return alert("Incorrect password!");
+    if (docSnap.exists) {
+      if (docSnap.data().password !== password) {
+        alert("Incorrect password!");
+        return;
+      }
     } else {
-      await userRef.set({name: username, password: password, points:0});
+      await userRef.set({ name: username, password: password, points: 0 });
     }
-    currentUser = username;
-    alert("Logged in as "+username);
-  }
 
-  async function submitPrediction() {
-    if(!currentUser) return alert("Log in first!");
-    const prediction = document.getElementById("mvpPrediction").value.trim();
-    if(!prediction) return alert("Enter a player name!");
-    alert("Prediction submitted: "+prediction);
-    // Admin will call addPoint(currentUser) when prediction is correct
+    currentUser = username; // ✅ Now properly set
+    alert("Logged in as " + currentUser);
+
+    // Enable prediction button now that user is logged in
+    document.getElementById("submitPredictionBtn").disabled = false;
+  } catch (err) {
+    console.error(err);
+    alert("Login error, try again.");
   }
+}
+
+// Submit prediction
+async function submitPrediction() {
+  if (!currentUser) return alert("Log in first!");
+  const prediction = document.getElementById("mvpPrediction").value.trim();
+  if (!prediction) return alert("Enter a player name!");
+
+  alert("Prediction submitted for: " + prediction);
+
+  // Here, call addPoint(currentUser) if correct
+  // addPoint(currentUser);
+}
 
   async function addPoint(username){
     const userRef = db.collection("predictions").doc(username);
