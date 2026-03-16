@@ -3,60 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rocket League Prediction Leaderboard</title>
+<title>RL Prediction Leaderboard</title>
 
-<!-- Firebase SDKs -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc, updateDoc, increment, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-  // 🔹 Your Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyDNuj0bwWC8Zvk_UsjmOktHf1MTXo8OFP4",
-    authDomain: "rl-tournament-kboayz.firebaseapp.com",
-    projectId: "rl-tournament-kboayz",
-    storageBucket: "rl-tournament-kboayz.firebasestorage.app",
-    messagingSenderId: "836913120932",
-    appId: "1:836913120932:web:c6994acf39bf71d6354831",
-    measurementId: "G-VR167KSXEB"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // 🔹 Current logged-in user
-  let currentUser = null;
-
-  // Create or login user
-  window.createOrLogin = async function() {
-    const username = document.getElementById("username").value.trim();
-    if (!username) return alert("Enter a username!");
-    currentUser = username;
-
-    const userRef = doc(db, "predictions", username);
-    await setDoc(userRef, { name: username, points: 0 }, { merge: true });
-  };
-
-  // Add a point when the prediction is correct
-  window.addPoint = async function(username) {
-    const userRef = doc(db, "predictions", username);
-    await updateDoc(userRef, { points: increment(1) });
-  };
-
-  // Real-time leaderboard
-  window.onload = () => {
-    const q = query(collection(db, "predictions"), orderBy("points", "desc"));
-    onSnapshot(q, (snapshot) => {
-      const list = document.getElementById("leaderboard");
-      list.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        list.innerHTML += `<li>${data.name}: ${data.points} pts</li>`;
-      });
-    });
-  };
-</script>
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
   body {
@@ -110,9 +61,53 @@
 <h2>Leaderboard</h2>
 <ul id="leaderboard"></ul>
 
-<!-- Example button to test adding a point -->
-<!-- In your real system, call addPoint(currentUser) when prediction is correct -->
-<!-- <button onclick="addPoint(currentUser)">Add Point (test)</button> -->
+<script>
+  // 🔹 Your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDNuj0bwWC8Zvk_UsjmOktHf1MTXo8OFP4",
+    authDomain: "rl-tournament-kboayz.firebaseapp.com",
+    projectId: "rl-tournament-kboayz",
+    storageBucket: "rl-tournament-kboayz.firebasestorage.app",
+    messagingSenderId: "836913120932",
+    appId: "1:836913120932:web:c6994acf39bf71d6354831",
+    measurementId: "G-VR167KSXEB"
+  };
 
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let currentUser = null;
+
+  // Create or login user
+  function createOrLogin() {
+    const username = document.getElementById("username").value.trim();
+    if (!username) return alert("Enter a username!");
+    currentUser = username;
+
+    db.collection("predictions").doc(username).set({ name: username, points: 0 }, { merge: true })
+      .then(() => {
+        alert("Logged in as " + username);
+      });
+  }
+
+  // Add a point to current user
+  function addPoint(username) {
+    const userRef = db.collection("predictions").doc(username);
+    userRef.update({ points: firebase.firestore.FieldValue.increment(1) });
+  }
+
+  // Real-time leaderboard
+  const leaderboardList = document.getElementById("leaderboard");
+  db.collection("predictions").orderBy("points", "desc")
+    .onSnapshot(snapshot => {
+      leaderboardList.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        leaderboardList.innerHTML += `<li>${data.name}: ${data.points} pts</li>`;
+      });
+    });
+
+</script>
 </body>
 </html>
