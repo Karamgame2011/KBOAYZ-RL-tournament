@@ -3,66 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RL Prediction Leaderboard</title>
-
-<!-- Firebase CDN -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
+<title>Prediction Leaderboard</title>
+<link rel="stylesheet" href="style.css">
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #0a0a1f;
-    color: white;
+  /* Extra styles for inputs/buttons */
+  #predictionSection, #loginSection {
+    margin: 20px auto;
     text-align: center;
-    padding: 20px;
   }
 
-  header {
-    background: linear-gradient(90deg, #000022, #a0e0ff);
-    background-size: 300% 100%;
-    padding: 20px;
-    font-size: 28px;
-    font-weight: bold;
-    animation: gradientSlide 10s ease-in-out infinite alternate;
-    margin-bottom: 20px;
+  #leaderboardTable {
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: 80%;
   }
 
-  @keyframes gradientSlide {
-    0% { background-position: 0% 0; }
-    100% { background-position: 50% 0; }
+  #leaderboardTable th, #leaderboardTable td {
+    border: 1px solid white;
+    padding: 8px;
+    text-align: center;
+  }
+
+  #leaderboardTable th {
+    background-color: #222266;
   }
 
   input, button {
-    padding: 10px;
+    padding: 8px;
     margin: 5px;
     font-size: 16px;
   }
 
-  ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  li {
-    font-size: 20px;
-    margin: 5px 0;
+  /* Highlight active navbar link */
+  nav a.active {
+    color: #a0e0ff;
+    font-weight: bold;
   }
 </style>
 </head>
 <body>
 
-<header>Rocket League Prediction Leaderboard</header>
+<header>Rocket League Family Tournament</header>
 
-<h2>Log In</h2>
-<input type="text" id="username" placeholder="Enter your username">
-<button onclick="createOrLogin()">Log In</button>
-
-<h2>Leaderboard</h2>
-<ul id="leaderboard"></ul>
+<nav>
+  <a href="index.html" class="nav-link">Home</a>
+  <a href="leaderboard.html" class="nav-link">Leaderboard</a>
+  <a href="schedule.html" class="nav-link">Schedule</a>
+  <a href="prediction.html" class="nav-link">Predictions</a>
+</nav>
 
 <script>
-  // 🔹 Your Firebase config
+  // Highlight current page in navbar
+  const links = document.querySelectorAll('nav a.nav-link');
+  const current = location.pathname.split("/").pop(); // gets current filename
+  links.forEach(link => {
+    if(link.getAttribute('href') === current){
+      link.classList.add('active');
+    }
+  });
+</script>
+
+<!-- Login Section -->
+<section id="loginSection">
+  <h2>Log In / Create Account</h2>
+  <input type="text" id="username" placeholder="Enter your username">
+  <input type="password" id="password" placeholder="Enter your password">
+  <button onclick="createOrLogin()">Log In / Register</button>
+</section>
+
+<!-- Prediction Section -->
+<section id="predictionSection">
+  <h2>Predict Next MVP</h2>
+  <input type="text" id="mvpPrediction" placeholder="Enter player name">
+  <button onclick="submitPrediction()">Submit Prediction</button>
+</section>
+
+<!-- Leaderboard -->
+<section>
+  <h2>Prediction Leaderboard</h2>
+  <table id="leaderboardTable">
+    <tr>
+      <th>Player</th>
+      <th>Points</th>
+    </tr>
+    <!-- Rows populated dynamically -->
+  </table>
+</section>
+
+<!-- Firebase + JS -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // 🔹 Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDNuj0bwWC8Zvk_UsjmOktHf1MTXo8OFP4",
     authDomain: "rl-tournament-kboayz.firebaseapp.com",
@@ -73,41 +106,65 @@
     measurementId: "G-VR167KSXEB"
   };
 
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
   let currentUser = null;
 
   // Create or login user
-  function createOrLogin() {
+  async function createOrLogin() {
     const username = document.getElementById("username").value.trim();
-    if (!username) return alert("Enter a username!");
-    currentUser = username;
+    const password = document.getElementById("password").value.trim();
+    if (!username || !password) return alert("Enter username and password!");
 
-    db.collection("predictions").doc(username).set({ name: username, points: 0 }, { merge: true })
-      .then(() => {
-        alert("Logged in as " + username);
-      });
-  }
-
-  // Add a point to current user
-  function addPoint(username) {
     const userRef = db.collection("predictions").doc(username);
-    userRef.update({ points: firebase.firestore.FieldValue.increment(1) });
+    const docSnap = await userRef.get();
+
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      if (data.password !== password) return alert("Incorrect password!");
+    } else {
+      // New user → create account
+      await userRef.set({ name: username, password: password, points: 0 });
+    }
+
+    currentUser = username;
+    alert("Logged in as " + username);
   }
 
-  // Real-time leaderboard
-  const leaderboardList = document.getElementById("leaderboard");
+  // Submit a prediction
+  async function submitPrediction() {
+    if (!currentUser) return alert("Log in first!");
+    const predictedMVP = document.getElementById("mvpPrediction").value.trim();
+    if (!predictedMVP) return alert("Enter a player name!");
+
+    // Here you would normally check if the prediction is correct
+    // For now, let's assume admin calls this function to add a point
+    alert("Prediction submitted for: " + predictedMVP);
+  }
+
+  // Add a point for correct prediction
+  async function addPoint(username) {
+    const userRef = db.collection("predictions").doc(username);
+    await userRef.update({ points: firebase.firestore.FieldValue.increment(1) });
+  }
+
+  // Real-time leaderboard update
+  const leaderboardTable = document.getElementById("leaderboardTable");
   db.collection("predictions").orderBy("points", "desc")
     .onSnapshot(snapshot => {
-      leaderboardList.innerHTML = "";
+      // Clear old rows
+      leaderboardTable.innerHTML = '<tr><th>Player</th><th>Points</th></tr>';
       snapshot.forEach(doc => {
         const data = doc.data();
-        leaderboardList.innerHTML += `<li>${data.name}: ${data.points} pts</li>`;
+        const row = leaderboardTable.insertRow();
+        const cellName = row.insertCell(0);
+        const cellPoints = row.insertCell(1);
+        cellName.textContent = data.name;
+        cellPoints.textContent = data.points;
       });
     });
-
 </script>
+
 </body>
 </html>
