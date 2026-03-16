@@ -10,14 +10,23 @@ body {
 }
 
 header {
-  background: linear-gradient(to left, #1E90FF, #104E8B);
-  background-size: 200% 100%; /* makes the animation possible */
+  background: linear-gradient(to left, #3aa0ff, #0a3d91);
+  background-size: 200% 100%;
   color: white;
-  padding: 15px;
+  padding: 20px;
   text-align: center;
   font-size: 24px;
   font-weight: bold;
-  animation: gradientMove 5s linear infinite; /* animates the gradient */
+  animation: gradientMove 6s ease infinite;
+}
+
+@keyframes gradientMove {
+  0% {
+    background-position: right;
+  }
+  100% {
+    background-position: left;
+  }
 }
 
 @keyframes gradientMove {
