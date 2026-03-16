@@ -61,7 +61,11 @@
   <input type="password" id="password" placeholder="Password">
   <button id="loginBtn">Log In / Register</button>
 </section>
-
+<script>
+    document.getElementById("loginBtn").addEventListener("click", function() {
+  createOrLogin();
+});
+    <script>
 <section id="predictionSection">
   <h2>Predict Next MVP</h2>
  <input type="text" id="mvpPrediction" placeholder="Player Name">
@@ -151,8 +155,6 @@ async function submitPrediction() {
       row.insertCell(1).textContent=data.points;
     });
   });
-  document.getElementById("loginBtn").addEventListener("click", function() {
-  createOrLogin();
 });
 </script>
 
