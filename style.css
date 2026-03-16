@@ -9,17 +9,25 @@ body {
   padding: 0;
 }
 
-/* --- Header --- */
 header {
-  background: #38bdf8;
-  color: #0f172a;
+  background: linear-gradient(to left, #1E90FF, #104E8B);
+  background-size: 200% 100%; /* makes the animation possible */
+  color: white;
+  padding: 15px;
   text-align: center;
-  padding: 25px 10px;
-  font-size: 2em;
+  font-size: 24px;
   font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  animation: gradientMove 5s linear infinite; /* animates the gradient */
 }
 
+@keyframes gradientMove {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
 /* Navbar container */
 nav {
   display: flex;
