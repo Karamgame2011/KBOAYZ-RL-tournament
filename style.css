@@ -17,15 +17,15 @@ header {
   text-align: center;
   font-size: 24px;
   font-weight: bold;
-  animation: gradientSlide 8s linear infinite alternate; /* alternate = back & forth */
+  animation: gradientSlide 10s ease-in-out infinite alternate;
 }
 
 @keyframes gradientSlide {
   0% {
-    background-position: 100% 0;
+    background-position: 0% 0;
   }
   100% {
-    background-position: 0 0;
+    background-position: 50% 0; /* only slide halfway to avoid snapping */
   }
 }
 /* Navbar container */
