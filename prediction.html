@@ -4,16 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prediction Leaderboard</title>
-<link rel="stylesheet" href="style.css">
 <style>
-  body { font-family: Arial, sans-serif; background-color: #0a0a1f; color: white; text-align: center; padding: 20px; }
-  header { background: linear-gradient(90deg, #000022, #a0e0ff); background-size: 300% 100%; padding: 20px; font-size: 28px; font-weight: bold; animation: gradientSlide 10s ease-in-out infinite alternate; margin-bottom: 10px; }
-  @keyframes gradientSlide { 0% { background-position: 0% 0; } 100% { background-position: 50% 0; } }
-  nav a.active { color: #a0e0ff; font-weight: bold; }
-  input, button { padding: 8px; margin: 5px; font-size: 16px; }
-  table { margin: 20px auto; border-collapse: collapse; width: 80%; }
-  th, td { border: 1px solid white; padding: 8px; text-align: center; }
-  th { background-color: #222266; }
+body { font-family: Arial, sans-serif; background-color: #0a0a1f; color: white; text-align: center; padding: 20px; }
+header { background: linear-gradient(90deg, #000022, #a0e0ff); background-size: 300% 100%; padding: 20px; font-size: 28px; font-weight: bold; animation: gradientSlide 10s ease-in-out infinite alternate; margin-bottom: 10px; }
+@keyframes gradientSlide { 0% { background-position: 0% 0; } 100% { background-position: 50% 0; } }
+nav a { color: white; text-decoration: none; margin: 0 10px; font-size: 18px; }
+nav a.active { color: #a0e0ff; font-weight: bold; }
+input, button { padding: 8px; margin: 5px; font-size: 16px; }
+table { margin: 20px auto; border-collapse: collapse; width: 80%; }
+th, td { border: 1px solid white; padding: 8px; text-align: center; }
+th { background-color: #222266; }
 </style>
 </head>
 <body>
@@ -48,90 +48,74 @@
   </table>
 </section>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <script>
-window.onload = function() {
+// ---------- User system ----------
+if(!localStorage.getItem("predUsers")) localStorage.setItem("predUsers", JSON.stringify({}));
+let currentUser = null;
 
-  // Navbar highlight
-  const links = document.querySelectorAll('nav a.nav-link');
-  const current = location.pathname.split("/").pop();
-  links.forEach(link => { if(link.getAttribute('href')===current) link.classList.add('active'); });
+// Login or register
+function registerLogin() {
+  const username = document.getElementById("predUsername").value.trim();
+  const password = document.getElementById("predPassword").value.trim();
+  if(username===""||password==="") return alert("Enter username and password");
 
-  // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyDNuj0bwWC8Zvk_UsjmOktHf1MTXo8OFP4",
-    authDomain: "rl-tournament-kboayz.firebaseapp.com",
-    projectId: "rl-tournament-kboayz",
-    storageBucket: "rl-tournament-kboayz.firebasestorage.app",
-    messagingSenderId: "836913120932",
-    appId: "1:836913120932:web:c6994acf39bf71d6354831",
-    measurementId: "G-VR167KSXEB"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  let currentUser = null;
-
-  // LOGIN / REGISTER
-  async function registerLogin() {
-    const username = document.getElementById("predUsername").value.trim();
-    const password = document.getElementById("predPassword").value.trim();
-    if(!username || !password) return alert("Enter username & password");
-
-    const userRef = db.collection("predUsers").doc(username);
-    const docSnap = await userRef.get();
-
-    if(docSnap.exists){
-      if(docSnap.data().password !== password) return alert("Wrong password");
-      currentUser = username;
-      document.getElementById("loginMsg").innerText = `Logged in as ${username}`;
-    } else {
-      // Register
-      await userRef.set({password: password, points:0, predictions:{}});
-      currentUser = username;
-      document.getElementById("loginMsg").innerText = `Registered and logged in as ${username}`;
-    }
-
-    document.getElementById("predictionPanel").style.display="block";
-    updatePredictionTable();
+  let users = JSON.parse(localStorage.getItem("predUsers"));
+  if(users[username]){
+    // Login
+    if(users[username].password !== password) return alert("Wrong password");
+    currentUser = username;
+    document.getElementById("loginMsg").innerText = `Logged in as ${username}`;
+  } else {
+    // Register
+    users[username] = {password: password, points:0, predictions:{}};
+    localStorage.setItem("predUsers", JSON.stringify(users));
+    currentUser = username;
+    document.getElementById("loginMsg").innerText = `Registered and logged in as ${username}`;
   }
 
-  document.getElementById("loginBtn").addEventListener("click", registerLogin);
+  document.getElementById("predictionPanel").style.display="block";
+  updatePredictionTable();
+}
 
-  // SUBMIT PREDICTION
-  const correctMVP = "Zaid"; // change dynamically per match
-  document.getElementById("submitPredictionBtn").addEventListener("click", async function(){
-    if(!currentUser) return alert("Log in first!");
-    const prediction = document.getElementById("mvpPrediction").value.trim();
-    if(!prediction) return alert("Enter a player name");
+// Submit prediction
+function submitPrediction() {
+  if(!currentUser) return alert("Log in first!");
+  const prediction = document.getElementById("mvpPrediction").value.trim();
+  if(!prediction) return alert("Enter a player name");
 
-    const userRef = db.collection("predUsers").doc(currentUser);
+  let users = JSON.parse(localStorage.getItem("predUsers"));
 
-    if(prediction.toLowerCase() === correctMVP.toLowerCase()){
-      await userRef.update({points: firebase.firestore.FieldValue.increment(1)});
-      alert("Correct! Point added.");
-    } else {
-      alert("Prediction submitted! (Incorrect)");
-    }
-    document.getElementById("mvpPrediction").value="";
-  });
+  // Example correct MVP
+  const correctMVP = "Zaid";
+  if(prediction.toLowerCase() === correctMVP.toLowerCase()){
+    users[currentUser].points += 1;
+    alert("Correct! Point added.");
+  } else {
+    alert("Prediction submitted! (Incorrect)");
+  }
 
-  // REAL-TIME LEADERBOARD
+  localStorage.setItem("predUsers", JSON.stringify(users));
+  document.getElementById("mvpPrediction").value="";
+  updatePredictionTable();
+}
+
+// Update leaderboard
+function updatePredictionTable() {
+  let users = JSON.parse(localStorage.getItem("predUsers"));
   const table = document.getElementById("predictionTable");
-  db.collection("predUsers").orderBy("points","desc").onSnapshot(snapshot=>{
-    table.innerHTML = '<tr><th>Username</th><th>Prediction Points</th></tr>';
-    snapshot.forEach(doc=>{
-      const data = doc.data();
-      const row = table.insertRow();
-      row.insertCell(0).textContent = doc.id;
-      row.insertCell(1).textContent = data.points;
-    });
-  });
+  table.innerHTML = '<tr><th>Username</th><th>Prediction Points</th></tr>';
 
-};
+  Object.keys(users).sort((a,b)=>users[b].points-users[a].points).forEach(u=>{
+    const row = table.insertRow();
+    row.insertCell(0).innerText = u;
+    row.insertCell(1).innerText = users[u].points;
+  });
+}
+
+// Attach button listeners
+document.getElementById("loginBtn").addEventListener("click", registerLogin);
+document.getElementById("submitPredictionBtn").addEventListener("click", submitPrediction);
 </script>
+
 </body>
 </html>
