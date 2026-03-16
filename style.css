@@ -11,13 +11,13 @@ body {
 
 header {
   background: linear-gradient(90deg, #000022, #a0e0ff);
-  background-size: 300% 100%; /* bigger width = more visible movement */
+  background-size: 300% 100%;
   color: white;
   padding: 20px;
   text-align: center;
   font-size: 24px;
   font-weight: bold;
-  animation: gradientSlide 8s linear infinite; /* slower for clarity */
+  animation: gradientSlide 8s linear infinite alternate; /* alternate = back & forth */
 }
 
 @keyframes gradientSlide {
