@@ -27,24 +27,24 @@
   <a href="prediction.html" class="nav-link">Predictions</a>
 </nav>
 
-<section>
-<h2>User Login / Register</h2>
-<input type="text" id="predUsername" placeholder="Username">
-<input type="password" id="predPassword" placeholder="Password">
-<button onclick="registerLogin()">Login / Register</button>
-<p id="loginMsg"></p>
+<section id="loginSection">
+  <h2>Login / Register</h2>
+  <input type="text" id="predUsername" placeholder="Username">
+  <input type="password" id="predPassword" placeholder="Password">
+  <button id="loginBtn">Log In / Register</button>
+  <p id="loginMsg"></p>
 </section>
 
-<section id="predictionSection" style="display:none;">
+<section id="predictionPanel" style="display:none;">
   <h2>Predict Next MVP</h2>
   <input type="text" id="mvpPrediction" placeholder="Player Name">
   <button id="submitPredictionBtn">Submit Prediction</button>
 </section>
 
 <section>
-  <h2>Prediction Leaderboard</h2>
-  <table id="leaderboardTable">
-    <tr><th>Player</th><th>Points</th></tr>
+  <h2>User Points</h2>
+  <table id="predictionTable">
+    <tr><th>Username</th><th>Prediction Points</th></tr>
   </table>
 </section>
 
@@ -55,7 +55,7 @@
 <script>
 window.onload = function() {
 
-  // Highlight current nav link
+  // Navbar highlight
   const links = document.querySelectorAll('nav a.nav-link');
   const current = location.pathname.split("/").pop();
   links.forEach(link => { if(link.getAttribute('href')===current) link.classList.add('active'); });
@@ -76,60 +76,62 @@ window.onload = function() {
   let currentUser = null;
 
   // LOGIN / REGISTER
-  async function createOrLogin() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-    if(!username || !password) return alert("Enter username & password!");
+  async function registerLogin() {
+    const username = document.getElementById("predUsername").value.trim();
+    const password = document.getElementById("predPassword").value.trim();
+    if(!username || !password) return alert("Enter username & password");
 
-    const userRef = db.collection("predictions").doc(username);
+    const userRef = db.collection("predUsers").doc(username);
     const docSnap = await userRef.get();
+
     if(docSnap.exists){
-      if(docSnap.data().password !== password) return alert("Incorrect password!");
+      if(docSnap.data().password !== password) return alert("Wrong password");
+      currentUser = username;
+      document.getElementById("loginMsg").innerText = `Logged in as ${username}`;
     } else {
-      await userRef.set({name: username, password: password, points:0});
+      // Register
+      await userRef.set({password: password, points:0, predictions:{}});
+      currentUser = username;
+      document.getElementById("loginMsg").innerText = `Registered and logged in as ${username}`;
     }
 
-    currentUser = username;
-    alert("Logged in as "+currentUser);
-
-    // Show prediction section
-    document.getElementById("predictionSection").style.display = "block";
+    document.getElementById("predictionPanel").style.display="block";
+    updatePredictionTable();
   }
 
-  // Attach login button listener
-  document.getElementById("loginBtn").addEventListener("click", createOrLogin);
+  document.getElementById("loginBtn").addEventListener("click", registerLogin);
 
   // SUBMIT PREDICTION
-  const correctMVP = "Zaid"; // change dynamically for real matches
+  const correctMVP = "Zaid"; // change dynamically per match
   document.getElementById("submitPredictionBtn").addEventListener("click", async function(){
     if(!currentUser) return alert("Log in first!");
     const prediction = document.getElementById("mvpPrediction").value.trim();
-    if(!prediction) return alert("Enter a player name!");
+    if(!prediction) return alert("Enter a player name");
+
+    const userRef = db.collection("predUsers").doc(currentUser);
 
     if(prediction.toLowerCase() === correctMVP.toLowerCase()){
-      const userRef = db.collection("predictions").doc(currentUser);
       await userRef.update({points: firebase.firestore.FieldValue.increment(1)});
       alert("Correct! Point added.");
     } else {
       alert("Prediction submitted! (Incorrect)");
     }
-    document.getElementById("mvpPrediction").value = "";
+    document.getElementById("mvpPrediction").value="";
   });
 
   // REAL-TIME LEADERBOARD
-  const table = document.getElementById("leaderboardTable");
-  db.collection("predictions").orderBy("points","desc").onSnapshot(snapshot=>{
-    table.innerHTML = '<tr><th>Player</th><th>Points</th></tr>';
+  const table = document.getElementById("predictionTable");
+  db.collection("predUsers").orderBy("points","desc").onSnapshot(snapshot=>{
+    table.innerHTML = '<tr><th>Username</th><th>Prediction Points</th></tr>';
     snapshot.forEach(doc=>{
       const data = doc.data();
       const row = table.insertRow();
-      row.insertCell(0).textContent = data.name;
+      row.insertCell(0).textContent = doc.id;
       row.insertCell(1).textContent = data.points;
     });
   });
 
 };
 </script>
-
 </body>
 </html>
