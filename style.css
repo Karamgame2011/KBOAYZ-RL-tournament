@@ -31,6 +31,15 @@ header {
 
 @keyframes gradientMove {
   0% {
+    background-position: right;
+  }
+  100% {
+    background-position: left;
+  }
+}
+
+@keyframes gradientMove {
+  0% {
     background-position: 100% 0;
   }
   100% {
