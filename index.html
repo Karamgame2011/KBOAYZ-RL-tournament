@@ -552,12 +552,15 @@ function fmtTime(iso) {
 }
 
 /* ── SCHEDULE ADMIN GATE ── */
+window._schedAdminOpen = false;
 window.trySchedCode = function() {
   const val = document.getElementById('sched-code-input').value;
   if(val===ADMIN_CODE) {
     document.getElementById('sched-code-err').classList.remove('show');
     document.getElementById('sched-admin-panel').classList.add('open');
     document.getElementById('sched-code-gate').style.display = 'none';
+    window._schedAdminOpen = true;
+    renderSchedule(allMatches);
   } else {
     document.getElementById('sched-code-err').classList.add('show');
     document.getElementById('sched-code-input').value = '';
@@ -567,6 +570,8 @@ window.closeSchedAdmin = function() {
   document.getElementById('sched-admin-panel').classList.remove('open');
   document.getElementById('sched-code-gate').style.display = 'flex';
   document.getElementById('sched-code-input').value = '';
+  window._schedAdminOpen = false;
+  renderSchedule(allMatches);
 };
 
 /* ── MATCHES — live listener (drives Schedule, Scores, Predict) ── */
@@ -582,7 +587,7 @@ onSnapshot(query(collection(db,'matches'), orderBy('createdAt','desc')), snap =>
 /* ── SCHEDULE ── */
 function renderSchedule(matches) {
   const list = document.getElementById('match-list');
-  const isAdmin = document.getElementById('sched-admin-panel').classList.contains('open');
+  const isAdmin = window._schedAdminOpen === true;
   if(!matches.length) {
     list.innerHTML = '<div style="color:var(--muted);font-size:.88rem;padding:.4rem">No matches added yet.</div>';
     return;
