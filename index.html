@@ -378,8 +378,9 @@ footer{position:relative;z-index:1;text-align:center;padding:2rem;color:#162840;
       <div><div class="field-label">Score A</div><input class="text-input" id="score-a" type="number" min="0" placeholder="0" style="width:70px"/></div>
       <div><div class="field-label">Score B</div><input class="text-input" id="score-b" type="number" min="0" placeholder="0" style="width:70px"/></div>
       <div><div class="field-label">Note (optional)</div><input class="text-input" id="match-note" type="text" placeholder="e.g. OT thriller" style="width:160px"/></div>
-      <div style="padding-top:1.15rem;display:flex;gap:.6rem">
-        <button class="btn" onclick="addMatch()">Add Match</button>
+      <div style="padding-top:1.15rem;display:flex;gap:.6rem;flex-wrap:wrap">
+        <button class="btn" id="form-submit-btn" onclick="addMatch()">Add Match</button>
+        <button class="btn secondary" id="form-cancel-edit" onclick="cancelEdit()" style="display:none">Cancel Edit</button>
         <button class="btn secondary" onclick="closeSchedAdmin()">Close Panel</button>
       </div>
     </div>
@@ -567,6 +568,7 @@ window.trySchedCode = function() {
   }
 };
 window.closeSchedAdmin = function() {
+  _editingMatchId = null;
   document.getElementById('sched-admin-panel').classList.remove('open');
   document.getElementById('sched-code-gate').style.display = 'flex';
   document.getElementById('sched-code-input').value = '';
@@ -630,6 +632,7 @@ function renderSchedule(matches) {
       </div>
       ${isAdmin ? `
       <div class="match-admin-row">
+        <button class="match-mini-btn" onclick="editMatch('${m._id}')">Edit</button>
         <button class="match-mini-btn" onclick="setMatchStatus('${m._id}','live')">Set Live</button>
         <button class="match-mini-btn" onclick="setMatchStatus('${m._id}','played')">Set Played</button>
         <button class="match-mini-btn" onclick="setMatchStatus('${m._id}','upcoming')">Set Upcoming</button>
@@ -638,6 +641,39 @@ function renderSchedule(matches) {
     list.appendChild(el);
   });
 }
+
+let _editingMatchId = null;
+
+window.editMatch = function(id) {
+  const m = allMatches.find(x=>x._id===id);
+  if(!m) return;
+  _editingMatchId = id;
+  // Pre-fill the form
+  document.getElementById('t1p1').value = m.t1p1||'';
+  document.getElementById('t1p2').value = m.t1p2||'';
+  document.getElementById('t2p1').value = m.t2p1||'';
+  document.getElementById('t2p2').value = m.t2p2||'';
+  document.getElementById('match-round').value = m.round||'Quarterfinal';
+  document.getElementById('match-time').value = m.matchTime||'';
+  document.getElementById('match-status').value = m.status||'upcoming';
+  document.getElementById('score-a').value = m.scoreA||'';
+  document.getElementById('score-b').value = m.scoreB||'';
+  document.getElementById('match-note').value = m.note||'';
+  // Swap button label
+  document.getElementById('form-submit-btn').textContent = 'Save Changes';
+  document.getElementById('form-cancel-edit').style.display = 'inline-block';
+  // Scroll to form
+  document.getElementById('sched-admin-panel').scrollIntoView({ behavior:'smooth' });
+};
+
+window.cancelEdit = function() {
+  _editingMatchId = null;
+  ['t1p1','t1p2','t2p1','t2p2','score-a','score-b','match-note','match-time']
+    .forEach(id=>document.getElementById(id).value='');
+  document.getElementById('match-status').value = 'upcoming';
+  document.getElementById('form-submit-btn').textContent = 'Add Match';
+  document.getElementById('form-cancel-edit').style.display = 'none';
+};
 
 window.addMatch = async function() {
   const t1p1 = document.getElementById('t1p1').value.trim();
@@ -651,15 +687,18 @@ window.addMatch = async function() {
   const scoreB    = document.getElementById('score-b').value;
   const note      = document.getElementById('match-note').value.trim();
   const matchTime = document.getElementById('match-time').value;
+  const data = { t1p1,t1p2,t2p1,t2p2,status,round, scoreA:scoreA||'', scoreB:scoreB||'', note, matchTime:matchTime||'' };
   try {
-    await addDoc(collection(db,'matches'),{
-      t1p1,t1p2,t2p1,t2p2,status,round,
-      scoreA:scoreA||'', scoreB:scoreB||'',
-      note, matchTime:matchTime||'', createdAt:Date.now()
-    });
-    ['t1p1','t1p2','t2p1','t2p2','score-a','score-b','match-note','match-time']
-      .forEach(id=>document.getElementById(id).value='');
-    toast('Match added');
+    if(_editingMatchId) {
+      await updateDoc(doc(db,'matches',_editingMatchId), data);
+      toast('Match updated');
+      cancelEdit();
+    } else {
+      await addDoc(collection(db,'matches'),{ ...data, createdAt:Date.now() });
+      ['t1p1','t1p2','t2p1','t2p2','score-a','score-b','match-note','match-time']
+        .forEach(id=>document.getElementById(id).value='');
+      toast('Match added');
+    }
   } catch(e){ toast('Error: '+e.message,true); }
 };
 
